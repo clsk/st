@@ -41,16 +41,15 @@ with open(sys.argv[1]) as file:
         if (len(line) > 0):
             parser = Parser(current_lineno, line, sym_table)
             node = parser.parse()
-            print node
             if (isinstance(node,Error)):
-                errors.append(error)
+                errors.append(node)
             else:
                 parse_tree.append(node)
 
         current_lineno = current_lineno+1
 
 for error in errors:
-    print "error at line " + repr(error.lineno) + ": " + error.str
+    print "line " + repr(error.lineno) + ": Error: " + error.str
 
 # Lets generate some code
 if (len(errors) == 0):
