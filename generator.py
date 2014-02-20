@@ -1,6 +1,16 @@
+def get_generator(node):
+    if (node.type == "Assignment"):
+        return AssignmentGenerator(node)
+    elif (node.type == "S"):
+        return SGenerator(node)
+    else:
+        return None
+
 class Generator(object):
+    def __init__(self, node = None):
+        self.node = node
     def generate(self):
-        pass
+        return ""
 
 class MainGenerator(Generator):
     def generate(self):
@@ -13,21 +23,45 @@ class EndGenerator(Generator):
     def generate(self):
         return "return %s;\n}" % self.retstatus
 
-class DeclarationGenerator(Generator):
-    def __init__(self, decl_node):
-        self.decl_node = decl_node
+class VectorLiteralGenerator(Generator):
+    def __init__(self, node):
+        Generator.__init__(self, node)
 
     def generate(self):
-        name = self.decl_node.name
-        out = ""
-        realloc = False;
-        if (not self.decl_node.redeclaration):
-            out += "Vector %s; %s.vect = NULL; " % (name, name)
-
-        out += "%s.len = %d; %s.vect = realloc(%s.vect, sizeof(double)*%s.len);\nif(%s.vect == NULL) {printf(\"Runtime Error: Cannot Allocate System Memory!\");}\n" % (name, len(self.decl_node), name, name, name, name)
+        name = self.node.parent.name
+        out = "vector_realloc(&%s, %d);\n" % (name, len(self.node.elements))
         i = 0
-        for e in self.decl_node.elements:
-            out += name + ".vect[" + str(i) + "] = " + e + ";\n"
+        for e in self.node.elements:
+            out += name + ".data[" + str(i) + "] = " + e + ";\n"
             i = i+1
 
         return out
+
+
+
+class AssignmentGenerator(Generator):
+    def __init__(self, decl_node):
+        Generator.__init__(self, decl_node)
+
+    def generate(self):
+        name = self.node.name
+        out = ""
+        if (not self.node.redeclaration):
+            out += "Vector %s; vector_init(&%s);\n" % (self.node.name, self.node.name)
+
+        if (self.node.child_node.type == "VectorLiteral"):
+            generator = VectorLiteralGenerator(self.node.child_node)
+            out += generator.generate()
+        elif (self.node.child_node.type == "S"):
+            generator = SGenerator(self.node.child_node)
+            out += name + " = " + generator.generate()
+
+
+        return out
+
+class SGenerator(Generator):
+    def __init__(self, snode):
+        Generator.__init__(self, snode)
+
+    def generate(self):
+        return "vector_free(&%s); %s = vector_S(%s);\n" % (self.node.parent.name, self.node.parent.name, self.node.id)

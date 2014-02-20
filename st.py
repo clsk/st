@@ -4,6 +4,7 @@ import re
 from parser import Parser
 from Error import Error
 from generator import *
+from symbol import *
 
 if len(sys.argv) < 2:
     print "Missing file argument"
@@ -11,7 +12,6 @@ if len(sys.argv) < 2:
 
 print "Scanning:", sys.argv[1] + "..."
 
-sym_table = {}
 errors = []
 output = ""
 current_lineno = 1
@@ -19,9 +19,6 @@ parse_tree = [] # more like parse list
 
 def error_count():
     return len(errors)
-
-def get_symbol(id):
-    return sym_table.get(id, None)
 
 
 # TODO:
@@ -39,11 +36,11 @@ with open(sys.argv[1]) as file:
             elif (line[pos-1] != "\\"):
                 line = line[:pos]
         if (len(line) > 0):
-            parser = Parser(current_lineno, line, sym_table)
+            parser = Parser(current_lineno, line)
             node = parser.parse()
             if (isinstance(node,Error)):
                 errors.append(node)
-            else:
+            elif (node is not None):
                 parse_tree.append(node)
 
         current_lineno = current_lineno+1
@@ -52,26 +49,17 @@ for error in errors:
     print "line " + repr(error.lineno) + ": Error: " + error.str
 
 # Lets generate some code
+# TODO: Put MainGenerator and EndGenerator in ast
 if (len(errors) == 0):
     generator = MainGenerator()
     output += generator.generate()
     print len(parse_tree)
     for node in parse_tree:
-        if (node.type == "Declaration"):
-            generator = DeclarationGenerator(node)
-
+        generator = get_generator(node)
         output += generator.generate()
+
     generator = EndGenerator("0")
     output += generator.generate()
     with open("out/out.c", "w") as out:
         out.write(output)
-
-class Token:
-    def __init__(self, token, op1, op2):
-        self.token = token
-        self.op1 = op1
-        self.op2 = op2
-
-
-# Regular Expressions
 
