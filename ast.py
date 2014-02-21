@@ -20,9 +20,14 @@ class VectorLiteralNode(Node):
         self.parent = parent
         self.elements = elements
 
-class SNode(Node):
-    def __init__(self, parent, id):
-        Node.__init__(self, "S", parent)
-        self.id = id
+class OperationNode(Node):
+    def __init__(self, operation, parent, args):
+        Node.__init__(self, "Operation", parent)
+        self.operation = operation
+        self.args = args
 
-
+class OutputNode(Node):
+    def __init__(self, output, is_vector):
+        Node.__init__(self, "Output")
+        self.output = output
+        self.is_vector = is_vector

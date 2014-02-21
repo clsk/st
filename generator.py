@@ -1,8 +1,10 @@
 def get_generator(node):
     if (node.type == "Assignment"):
         return AssignmentGenerator(node)
-    elif (node.type == "S"):
-        return SGenerator(node)
+    elif (node.type == "Operation"):
+        return OperationGenerator(node)
+    elif (node.type == "Output"):
+        return OutputGenerator(node)
     else:
         return None
 
@@ -14,7 +16,7 @@ class Generator(object):
 
 class MainGenerator(Generator):
     def generate(self):
-        return '#include <stdlib.h>\n#include <stdio.h>\n#include "vector.h"\nint main() {\n'
+        return '#include <stdlib.h>\n#include <stdio.h>\n#include "vector.h"\nint main() { Vector tmp;\n'
 
 class EndGenerator(Generator):
     def __init__(self, retstatus = "0"):
@@ -37,8 +39,6 @@ class VectorLiteralGenerator(Generator):
 
         return out
 
-
-
 class AssignmentGenerator(Generator):
     def __init__(self, decl_node):
         Generator.__init__(self, decl_node)
@@ -52,16 +52,32 @@ class AssignmentGenerator(Generator):
         if (self.node.child_node.type == "VectorLiteral"):
             generator = VectorLiteralGenerator(self.node.child_node)
             out += generator.generate()
-        elif (self.node.child_node.type == "S"):
-            generator = SGenerator(self.node.child_node)
-            out += name + " = " + generator.generate()
-
+        elif (self.node.child_node.type == "Operation"):
+            generator = OperationGenerator(self.node.child_node)
+            out += generator.generate()
 
         return out
 
-class SGenerator(Generator):
-    def __init__(self, snode):
-        Generator.__init__(self, snode)
+class OperationGenerator(Generator):
+    def __init__(self, node):
+        Generator.__init__(self, node)
 
     def generate(self):
-        return "vector_free(&%s); %s = vector_S(%s);\n" % (self.node.parent.name, self.node.parent.name, self.node.id)
+        out = "tmp = %s;  %s = vector_%c(" % (self.node.parent.name, self.node.parent.name, self.node.operation)
+        for arg in self.node.args:
+            out += "&%c," % arg
+
+        out = out[:-1]
+        out += "); vector_free(&tmp);\n"
+
+        return out
+
+class OutputGenerator(Generator):
+    def __init__(self, node):
+        Generator.__init__(self, node)
+
+    def generate(self):
+        if (self.node.is_vector):
+            return "vector_output(&%s);\n" % self.node.output
+        else:
+            return "printf(%s);\n" % self.node.output

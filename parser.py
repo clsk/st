@@ -15,6 +15,23 @@ class Parser:
         self.lineno = lineno
         self.line = line
 
+    def parse(self):
+        if (len(self.line) < 3 or self.line[1] != " "):
+            return Error(self.lineno, "At least one argument is expected per statement")
+
+        token, self.line = Parser._eat_token(self.line)
+
+        if (token in '<'):
+            return self._parse_output(token);
+        elif (re.match(re_identifier, token)):
+            return self._parse_assignment(token)
+        elif (token in reserved_words):
+            return self._parse_reserved(token, None)
+            # No code needs to be generated for this as the result will get thrown away anyways
+            return None
+        else:
+            return Error(self.lineno, "Unexpected Token '%s'" % self.line[0])
+
     # private
     @staticmethod
     def _is_float(f):
@@ -34,13 +51,21 @@ class Parser:
         else:
             return s, ""
 
-    def _parse_io(self, token):
-        if (token == "<"): # output
-            pass
-        else:
-            pass
+    def _parse_output(self, token):
+        self.line = self.line.strip()
+        if (self.line[0] == '"'): # Output string
+            if (self.line[-1] != '"'):
+                return Error(self.lineno, "Unmatched quotes")
+            is_vector = False
+        else: # Output Vector
+            tokens = Parser._tokenize(self.line)
+            if (len(tokens) != 1):
+                return Error(self.lineno, "Exactly one argument expected for output operation")
+            if (not Parser._is_identifier(self.line)):
+                return Error(self.lineno, "%s is not a valid identifier" % self.line)
+            is_vector = True
 
-        return None
+        return OutputNode(self.line, is_vector)
 
     def _parse_vector_literal(self, token, parent_node):
         tokens = Parser._tokenize(self.line)
@@ -70,36 +95,29 @@ class Parser:
         Symbol.table[node.name] = Symbol(node.name)
         return node
 
+    _args_for_op = {
+            'S': 1,
+            'C': 1,
+            'E': 2,
+            'P': 2,
+            'I': 1
+            }
+
     def _parse_reserved(self, token, parent):
         tokens = Parser._tokenize(self.line)
-        if (token == 'S'):
-            if (len(tokens) != 1):
-                return Error(self.lineno, "Exactly one argument expected for S operation")
-            if (not Parser._is_identifier(tokens[0])):
-                return Error(self.lineno, "{0} is not a valid identifier".format(tokens[0]))
-            if (tokens[0] not in Symbol.table):
+        if (Parser._args_for_op[token] != len(tokens)):
+            return Error(self.lineno, "Exactly %d argument(s) expected for %s operation" % (args_for_op[token], token))
+        for arg in tokens:
+            if (not Parser._is_identifier(arg)):
+                return Error(self.lineno, "%s is not a valid identifier" % arg)
+            if (arg not in Symbol.table):
                 return Error(self.lineno, "Undeclared identifier {0}.")
 
-            if (parent == None):
-                return None
-            else:
-                return SNode(parent, tokens[0])
+        if (parent == None):
+            return None
+        else:
+            return OperationNode(token, parent, tokens)
 
         return None
 
-    def parse(self):
-        if (len(self.line) < 3 or self.line[1] != " "):
-            return Error(self.lineno, "At least one argument is expected per statement")
 
-        token, self.line = Parser._eat_token(self.line)
-
-        if (token in '><'):
-            return _parse_io(token);
-        elif (re.match(re_identifier, token)):
-            return self._parse_assignment(token)
-        elif (token in reserved_words):
-            return self._parse_reserved(token, None)
-            # No code needs to be generated for this as the result will get thrown away anyways
-            return None
-        else:
-            return Error(self.lineno, "Unexpected Token '%s'" % self.line[0])

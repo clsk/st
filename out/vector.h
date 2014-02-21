@@ -1,13 +1,21 @@
-#define DATA_TYPE float
-#define DATA_SIZE sizeof(float)
+#define DATA_TYPE double
+#define DATA_SIZE sizeof(DATA_TYPE)
 
 typedef struct
 {
-    char name;
     unsigned int len;
     double *data;
 } Vector;
 
-Vector from_input();
-Vector add_vectors(double * a, double *  b, unsigned int len);
-void print_vector(Vector *vector);
+void vector_output(Vector* a);
+void vector_init(Vector* a);
+void vector_alloc(Vector* a);
+void vector_realloc(Vector* a, unsigned int len);
+void vector_free(Vector* a);
+Vector input_vector(Vector* a);
+Vector vector_C(Vector* a);
+Vector vector_S(Vector* a);
+Vector vector_P(Vector* a, Vector* b);
+Vector vector_E(Vector* a, Vector* b);
+Vector vector_I(Vector* a);
+
