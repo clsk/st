@@ -21,8 +21,10 @@ class Parser:
 
         token, self.line = Parser._eat_token(self.line)
 
-        if (token in '<'):
+        if (token == '<'):
             return self._parse_output(token);
+        elif (token == '>'):
+            return self._parse_input(token);
         elif (re.match(re_identifier, token)):
             return self._parse_assignment(token)
         elif (token in reserved_words):
@@ -63,9 +65,25 @@ class Parser:
                 return Error(self.lineno, "Exactly one argument expected for output operation")
             if (not Parser._is_identifier(self.line)):
                 return Error(self.lineno, "%s is not a valid identifier" % self.line)
+            if (self.line not in Symbol.table):
+                return Error(self.lineno, "Undeclared identifier {0}.")
+
             is_vector = True
 
         return OutputNode(self.line, is_vector)
+
+    def _parse_input(self, token):
+        tokens = Parser._tokenize(self.line)
+        if (len(tokens) != 1):
+            return Error(self.lineno, "Exactly one argument expected for input operation")
+        if (not Parser._is_identifier(self.line)):
+            return Error(self.lineno, "%s is not a valid identifier" % self.line)
+        # Handle this as an assignment
+        n = AssignmentNode(self.line, self.line in Symbol.table)
+        if (self.line not in Symbol.table):
+            Symbol.table[self.line] = Symbol(self.line)
+        n.child_node = InputNode(n)
+        return n
 
     def _parse_vector_literal(self, token, parent_node):
         tokens = Parser._tokenize(self.line)
@@ -92,7 +110,9 @@ class Parser:
         if (isinstance(node.child_node, Error)):
             return node.child_node
 
-        Symbol.table[node.name] = Symbol(node.name)
+        if (node.name not in Symbol.table):
+            Symbol.table[node.name] = Symbol(node.name)
+
         return node
 
     _args_for_op = {
@@ -114,10 +134,11 @@ class Parser:
                 return Error(self.lineno, "Undeclared identifier {0}.")
 
         if (parent == None):
+            # If this operationg won't get assigned to anything
+            # Then just return None
             return None
         else:
             return OperationNode(token, parent, tokens)
 
         return None
-
 

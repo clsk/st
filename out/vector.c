@@ -47,7 +47,7 @@ void vector_free(Vector *a)
     a->data = NULL;
 }
 
-Vector input_vector(Vector* a)
+Vector vector_input()
 {
     char input[512];
     Vector r;
@@ -60,14 +60,16 @@ Vector input_vector(Vector* a)
     DATA_TYPE fs[256];
     unsigned int len = 0, i = 0;
     char* c = strtok(input, " ");
-    for (int i = 0; c != NULL; i++) {
+    for (; c != NULL; i++) {
         fs[i] = atof(c);
+        printf("%f ", fs[i]);
         c = strtok(NULL, " ");
     }
 
-    r.len = i+1;
+    printf("%d", i);
+    r.len = i;
     vector_alloc(&r);
-    memcpy(fs, r.data, r.len);
+    memcpy(r.data, fs, DATA_SIZE*r.len);
 
     return r;
 }

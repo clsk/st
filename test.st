@@ -15,3 +15,5 @@ f I f
 < f
 d I d
 < d
+> g
+< g

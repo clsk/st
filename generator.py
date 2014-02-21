@@ -55,6 +55,9 @@ class AssignmentGenerator(Generator):
         elif (self.node.child_node.type == "Operation"):
             generator = OperationGenerator(self.node.child_node)
             out += generator.generate()
+        elif (self.node.child_node.type == "Input"):
+            generator = InputGenerator(self.node.child_node)
+            out += generator.generate()
 
         return out
 
@@ -81,3 +84,10 @@ class OutputGenerator(Generator):
             return "vector_output(&%s);\n" % self.node.output
         else:
             return "printf(%s);\n" % self.node.output
+
+class InputGenerator(Generator):
+    def __init__(self, node):
+        Generator.__init__(self,node)
+
+    def generate(self):
+        return "%s = vector_input();\n" % self.node.parent.name

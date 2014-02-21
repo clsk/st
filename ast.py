@@ -31,3 +31,7 @@ class OutputNode(Node):
         Node.__init__(self, "Output")
         self.output = output
         self.is_vector = is_vector
+
+class InputNode(Node):
+    def __init__(self, parent):
+        Node.__init__(self, "Input", parent)
