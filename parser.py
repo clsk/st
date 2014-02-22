@@ -29,8 +29,6 @@ class Parser:
             return self._parse_assignment(token)
         elif (token in reserved_words):
             return self._parse_reserved(token, None)
-            # No code needs to be generated for this as the result will get thrown away anyways
-            return None
         else:
             return Error(self.lineno, "Unexpected Token '%s'" % self.line[0])
 
