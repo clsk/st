@@ -18,4 +18,3 @@ Vector vector_S(Vector* a);
 Vector vector_P(Vector* a, Vector* b);
 Vector vector_E(Vector* a, Vector* b);
 Vector vector_I(Vector* a);
-
