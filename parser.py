@@ -137,6 +137,3 @@ class Parser:
             return None
         else:
             return OperationNode(token, parent, tokens)
-
-        return None
-
